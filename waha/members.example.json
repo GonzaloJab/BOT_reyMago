@@ -1,0 +1,5 @@
+[
+  {"name": "Ana López", "phone": "34600000001", "context": "Le gusta leer y quedar a cenar con amigos. Sustituye este texto.", "admin": true},
+  {"name": "Luis García", "phone": "34600000002", "context": "Le cuesta desconectar del trabajo. Sustituye este texto.", "admin": false},
+  {"name": "Marta Ruiz", "phone": "34600000003", "context": "", "admin": false}
+]

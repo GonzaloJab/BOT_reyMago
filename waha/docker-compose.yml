@@ -1,0 +1,66 @@
+services:
+  waha:
+    image: devlikeapro/waha
+    container_name: waha
+    restart: unless-stopped
+    init: true
+    # Chromium (motor WEBJS) necesita más memoria compartida de la que Docker da por defecto.
+    shm_size: "2gb"
+    # IP de la LAN (enp0s25) para abrirlo desde el cliente SSH, sin reenvío de puertos.
+    ports:
+      - "${HOST_BIND:-10.12.2.135}:3001:3000"
+      - "127.0.0.1:3001:3000"
+    env_file:
+      - .env
+    environment:
+      WHATSAPP_API_PORT: "3000"
+      WHATSAPP_API_HOSTNAME: ${PUBLIC_HOST:-10.12.2.135}
+      WAHA_BASE_URL: http://${PUBLIC_HOST:-10.12.2.135}:3001
+      WAHA_PUBLIC_URL: http://${PUBLIC_HOST:-10.12.2.135}:3001
+      WHATSAPP_DEFAULT_ENGINE: GOWS
+      WHATSAPP_START_SESSION: default
+      WHATSAPP_RESTART_ALL_SESSIONS: "True"
+      WAHA_WORKER_ID: waha
+      WAHA_DASHBOARD_ENABLED: "True"
+      WAHA_PRINT_QR: "True"
+      WAHA_AUTO_START_DELAY_SECONDS: "5"
+      WHATSAPP_HOOK_URL: http://bot:8080/webhook
+      WHATSAPP_HOOK_EVENTS: message
+      WHATSAPP_HOOK_RETRIES_POLICY: linear
+      WHATSAPP_HOOK_RETRIES_DELAY_SECONDS: "2"
+      WHATSAPP_HOOK_RETRIES_ATTEMPTS: "4"
+    depends_on:
+      bot:
+        condition: service_healthy
+    volumes:
+      - ./sessions:/app/.sessions
+      - ./media:/app/.media
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  bot:
+    build: ./bot
+    container_name: waha-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAHA_BASE_URL: http://waha:3000
+      WAHA_SESSION: default
+      DATA_DIR: /data
+    ports:
+      - "${HOST_BIND:-10.12.2.135}:8090:8080"
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - ./bot-data:/data
+      - ./members.json:/app/members.json:ro
+      - ./system-prompt.txt:/app/system-prompt.txt:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

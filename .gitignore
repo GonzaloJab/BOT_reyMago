@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+
+waha/members.json
+
+waha/sessions/
+waha/media/
+waha/bot-data/
+waha/qr.png
+
+__pycache__/
+*.pyc
+.venv/
+venv/
